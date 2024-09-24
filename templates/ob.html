@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Объяснение Игр</title>
+    <style>
+        body {
+            background: url('/static/ob.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #ffd700;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 20px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.8); /* Полупрозрачный черный фон для контраста */
+            border: 2px solid #ffd700;
+            border-radius: 10px;
+        }
+        h1, h2, p {
+            margin: 10px 0;
+        }
+        h1 {
+            font-size: 2em;
+        }
+        h2 {
+            font-size: 1.5em;
+        }
+        p {
+            font-size: 1em;
+            line-height: 1.5em;
+        }
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5em;
+            }
+            h2 {
+                font-size: 1.2em;
+            }
+            p {
+                font-size: 0.9em;
+            }
+        }
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.2em;
+            }
+            h2 {
+                font-size: 1em;
+            }
+            p {
+                font-size: 0.8em;
+            }
+        }
+    </style>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+</script>
+</head>
+<body>
+    <div class="container">
+        <h1>Объяснение Игр</h1>
+
+        <div class="game">
+            <h2>Игра SCRATSofol</h2>
+            <p>В игре вы должны поймать как можно больше падающих SCRATS. За каждое попадание вы получите по 1000 SCRATS токенов. При окончании этапа игры, которая длится всего 25 секунд, собранный баланс переводится на ваш основной баланс, который сможете увидеть на главной странице вашего профиля. Вы сможете играть в данную игру через каждые два часа, на что указывает таймер.</p>
+        </div>
+
+        <div class="game">
+            <h2>Игра SCRATS Boll</h2>
+            <p>Эта игра дает возможность собрать токены SCRATS по принципу бильярда. Вы целитесь на символы, как держа кий, перемещаете с лева на право кий, чтобы попасть по знакам. Ваша цель - не дать символам достичь верхней границы игры и при этом уничтожить как можно больше знаков. За каждое попадание вы получите по 100 SCRATS. В данной игре вы можете набрать очень много токенов SCRATS. При окончании игры ваш выигранный баланс переводится в общий баланс. Эта игра активируется через каждый час.</p>
+        </div>
+
+        <div class="game">
+            <h2>Игра SCRATS Cube</h2>
+            <p>Это игра на шанс. При нажатии на кубики, кубик взрывается, что может привести вас к выигрышу от 5000 до 20000 SCRATS. Под 16 кубиками скрыто четыре выигрыша: 20000, 50000, 10000 и 5000, остальные пусты. У вас есть шанс на три попытки. Игра активируется через каждые 4 часа.</p>
+        </div>
+          
+        <div class="game">
+            <h2>Игра SCRATS Slot</h2>
+            <p>Это игра в слоты. Это игра дает вам возможность играть каждый час в слоты на 3 фриспина что увеличивает ваш шанс выграть еще больше токенов SCRATS </p>
+        </div>
+
+        <h2>Удачи всем вам в наших играх!</h2>
+    </div>
+</body>
+</html>

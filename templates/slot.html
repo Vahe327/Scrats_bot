@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SCRATS SLOT</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: url('/static/slot.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .game-container {
+            background: rgba(34, 34, 34, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            position: relative;
+            width: 90vw;
+            max-width: 800px;
+        }
+        .title {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #ffcc00;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+        .reels {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+            position: relative;
+            width: 100%;
+        }
+        .reel {
+            background: #333;
+            width: 18%;
+            height: 180px;
+            margin: 0 5px;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        .symbols {
+            position: absolute;
+            top: 0;
+            width: 100%;
+        }
+        .symbol {
+            width: 100%;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2em;
+            color: #ffcc00;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            border-bottom: 1px solid #555;
+        }
+        .controls {
+            margin-top: 10px;
+        }
+        .btn {
+            background: #ffcc00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #e6b800;
+        }
+        .balance {
+            margin-top: 10px;
+            font-size: 1.2em;
+            color: #00ff00;
+        }
+        .message {
+            margin-top: 10px;
+            font-size: 1.2em;
+            color: #ffcc00;
+        }
+        .win-line {
+            position: absolute;
+            height: 2px;
+            width: 100%;
+            background: rgba(255, 255, 0, 0.8);
+            display: none;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .highlight-line {
+            position: absolute;
+            height: 2px;
+            width: 100%;
+            background: rgba(255, 255, 0, 0.8);
+            display: none;
+            z-index: 1;
+        }
+        @keyframes spin {
+            0% {
+                top: -180px;
+            }
+            100% {
+                top: 0;
+            }
+        }
+    </style>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+
+        function getParameterByName(name) {
+            var url = window.location.href;
+            name = name.replace(/[\[\]]/g, '\\$&');
+            var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
+            var results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
+
+        var userId = getParameterByName('user_id');
+        console.log('User ID:', userId);
+
+        const symbols = ['🍒', '🍋', '🍉', '🍇', '🍓'];
+        let balance = 0;
+        let spinCount = 0;
+        const maxSpins = 3;
+        const spinSound = new Audio('/static/slot.mp3');
+
+        function getRandomSymbols() {
+            let shuffled = symbols.sort(() => 0.5 - Math.random());
+            return [...shuffled, ...shuffled, ...shuffled];
+        }
+
+        function spinReel(reel, delay) {
+            const symbolsElement = reel.querySelector('.symbols');
+            symbolsElement.style.animation = 'none';
+            symbolsElement.offsetHeight;
+            symbolsElement.style.top = '-180px';
+            symbolsElement.innerHTML = '';
+            getRandomSymbols().forEach(symbol => {
+                const symbolDiv = document.createElement('div');
+                symbolDiv.className = 'symbol';
+                symbolDiv.textContent = symbol;
+                symbolsElement.appendChild(symbolDiv);
+            });
+
+            setTimeout(() => {
+                symbolsElement.style.animation = 'spin 1s cubic-bezier(0.4, 0, 0.2, 1) forwards';
+            }, delay);
+        }
+
+        function checkWin() {
+            const symbolsElements = document.querySelectorAll('.reel .symbols');
+            const winLines = [
+                { line: [0, 0, 0, 0, 0], multipliers: { '🍒': 100000, '🍋': 100000, '🍉': 200000, '🍇': 200000, '🍓': 400000 } },
+                { line: [1, 1, 1, 1, 1], multipliers: { '🍒': 100000, '🍋': 100000, '🍉': 200000, '🍇': 200000, '🍓': 400000 } },
+                { line: [2, 2, 2, 2, 2], multipliers: { '🍒': 100000, '🍋': 100000, '🍉': 200000, '🍇': 200000, '🍓': 400000 } },
+                { line: [0, 1, 2, 1, 0], multipliers: { '🍒': 1000, '🍋': 1000, '🍉': 10000, '🍇': 10000, '🍓': 50000 } },
+                { line: [2, 1, 0, 1, 2], multipliers: { '🍒': 1000, '🍋': 1000, '🍉': 10000, '🍇': 10000, '🍓': 50000 } },
+                { line: [0, 1, 2, 1, 0], multipliers: { '🍒': 100, '🍋': 100, '🍉': 500, '🍇': 500, '🍓': 1000 } },
+                { line: [2, 1, 0, 1, 2], multipliers: { '🍒': 100, '🍋': 100, '🍉': 500, '🍇': 500, '🍓': 1000 } }
+            ];
+
+            const partialWinLines = [
+                { line: [0, 0, 0], multipliers: { '🍒': 100, '🍋': 100, '🍉': 200, '🍇': 200, '🍓': 500 } },
+                { line: [1, 1, 1], multipliers: { '🍒': 100, '🍋': 100, '🍉': 200, '🍇': 200, '🍓': 500 } },
+                { line: [2, 2, 2], multipliers: { '🍒': 100, '🍋': 100, '🍉': 200, '🍇': 200, '🍓': 500 } },
+                { line: [0, 0], multipliers: { '🍒': 50, '🍋': 50, '🍉': 100, '🍇': 100, '🍓': 300 } },
+                { line: [1, 1], multipliers: { '🍒': 50, '🍋': 50, '🍉': 100, '🍇': 100, '🍓': 300 } },
+                { line: [2, 2], multipliers: { '🍒': 50, '🍋': 50, '🍉': 100, '🍇': 100, '🍓': 300 } },
+                { line: [0, 0, 0, 0], multipliers: { '🍒': 800, '🍋': 800, '🍉': 1200, '🍇': 1200, '🍓': 2500 } },
+                { line: [1, 1, 1, 1], multipliers: { '🍒': 800, '🍋': 800, '🍉': 1200, '🍇': 1200, '🍓': 2500 } },
+                { line: [2, 2, 2, 2], multipliers: { '🍒': 800, '🍋': 800, '🍉': 1200, '🍇': 1200, '🍓': 2500 } },
+
+                { line: [0, 0, 0], multipliers: { '🍒': 100, '🍋': 100, '🍉': 200, '🍇': 200, '🍓': 500 } },
+                { line: [1, 1, 1], multipliers: { '🍒': 100, '🍋': 100, '🍉': 200, '🍇': 200, '🍓': 500 } },
+                { line: [2, 2, 2], multipliers: { '🍒': 100, '🍋': 100, '🍉': 200, '🍇': 200, '🍓': 500 } },
+                { line: [0, 0], multipliers: { '🍒': 50, '🍋': 50, '🍉': 100, '🍇': 100, '🍓': 300 } },
+                { line: [1, 1], multipliers: { '🍒': 50, '🍋': 50, '🍉': 100, '🍇': 100, '🍓': 300 } },
+                { line: [2, 2], multipliers: { '🍒': 50, '🍋': 50, '🍉': 100, '🍇': 100, '🍓': 300 } },
+                { line: [0, 0, 0, 0], multipliers: { '🍒': 800, '🍋': 800, '🍉': 1200, '🍇': 1200, '🍓': 2500 } },
+                { line: [1, 1, 1, 1], multipliers: { '🍒': 800, '🍋': 800, '🍉': 1200, '🍇': 1200, '🍓': 2500 } },
+                { line: [2, 2, 2, 2], multipliers: { '🍒': 800, '🍋': 800, '🍉': 1200, '🍇': 1200, '🍓': 2500 } },
+
+                { line: [0, 0, 0], multipliers: { '🍒': 100, '🍋': 100, '🍉': 200, '🍇': 200, '🍓': 500 } },
+                { line: [1, 1, 1], multipliers: { '🍒': 100, '🍋': 100, '🍉': 200, '🍇': 200, '🍓': 500 } },
+                { line: [2, 2, 2], multipliers: { '🍒': 100, '🍋': 100, '🍉': 200, '🍇': 200, '🍓': 500 } },
+                { line: [0, 0], multipliers: { '🍒': 50, '🍋': 50, '🍉': 100, '🍇': 100, '🍓': 300 } },
+                { line: [1, 1], multipliers: { '🍒': 50, '🍋': 50, '🍉': 100, '🍇': 100, '🍓': 300 } },
+                { line: [2, 2], multipliers: { '🍒': 50, '🍋': 50, '🍉': 100, '🍇': 100, '🍓': 300 } },
+                { line: [0, 0, 0, 0], multipliers: { '🍒': 800, '🍋': 800, '🍉': 1200, '🍇': 1200, '🍓': 2500 } },
+                { line: [1, 1, 1, 1], multipliers: { '🍒': 800, '🍋': 800, '🍉': 1200, '🍇': 1200, '🍓': 2500 } },
+                { line: [2, 2, 2, 2], multipliers: { '🍒': 800, '🍋': 800, '🍉': 1200, '🍇': 1200, '🍓': 2500 } }
+            ];
+
+            let totalWin = 0;
+            let winningLines = [];
+
+            // Проверка всех выигрышных линий
+            winLines.forEach(winLine => {
+                const firstSymbol = symbolsElements[0].querySelectorAll('.symbol')[winLine.line[0]].textContent;
+                let isWin = true;
+
+                for (let i = 1; i < winLine.line.length; i++) {
+                    const reelSymbols = symbolsElements[i].querySelectorAll('.symbol');
+                    if (reelSymbols[winLine.line[i]].textContent !== firstSymbol) {
+                        isWin = false;
+                        break;
+                    }
+                }
+
+                if (isWin) {
+                    const multiplier = winLine.multipliers[firstSymbol] || 0;
+                    totalWin += multiplier;
+                    winningLines.push(winLine.line);
+                }
+            });
+
+            // Проверка всех частичных выигрышных линий
+            partialWinLines.forEach(partialWinLine => {
+                const firstSymbol = symbolsElements[0].querySelectorAll('.symbol')[partialWinLine.line[0]].textContent;
+                let isWin = true;
+
+                for (let i = 1; i < partialWinLine.line.length; i++) {
+                    const reelSymbols = symbolsElements[i].querySelectorAll('.symbol');
+                    if (reelSymbols[partialWinLine.line[i]].textContent !== firstSymbol) {
+                        isWin = false;
+                        break;
+                    }
+                }
+
+                if (isWin) {
+                    const multiplier = partialWinLine.multipliers[firstSymbol] || 0;
+                    totalWin += multiplier;
+                    winningLines.push(partialWinLine.line);
+                }
+            });
+
+            return { totalWin, winningLines };
+        }
+
+        function highlightWinLines(lines) {
+            document.querySelectorAll('.highlight-line').forEach(el => el.remove());
+
+            lines.forEach(line => {
+                line.forEach((position, reelIndex) => {
+                    const highlightElement = document.createElement('div');
+                    highlightElement.className = 'highlight-line';
+                    highlightElement.style.top = `${position * 60 + 30 - 1}px`;
+                    highlightElement.style.display = 'block';
+
+                    const reel = document.getElementById(`reel${reelIndex + 1}`);
+                    reel.appendChild(highlightElement);
+                });
+            });
+        }
+
+        function spin() {
+            if (spinCount >= maxSpins) {
+                document.getElementById('message').textContent = 'Максимальное количество вращений достигнуто';
+                return;
+            }
+
+            spinCount++;
+            document.getElementById('message').textContent = '';
+            document.getElementById('win-line').style.display = 'none';
+            document.querySelectorAll('.highlight-line').forEach(el => el.style.display = 'none');
+            const reels = document.querySelectorAll('.reel');
+            reels.forEach((reel, index) => {
+                setTimeout(() => {
+                    spinSound.play();
+                    spinReel(reel, 0);
+                }, index * 200);
+            });
+
+            setTimeout(() => {
+                const { totalWin, winningLines } = checkWin();
+                if (totalWin > 0) {
+                    document.getElementById('message').textContent = `You Won ${totalWin} SCRATS!`;
+                    balance += totalWin;
+                    document.getElementById('balance').textContent = `Balance: ${balance}`;
+                    highlightWinLines(winningLines);
+                } else {
+                    document.getElementById('message').textContent = 'Try again!';
+                }
+
+                if (spinCount === maxSpins) {
+                    setTimeout(() => {
+                        updateUserBalance(userId, balance, winningLines.length);
+                    }, 1000);
+                }
+            }, reels.length * 200 + 1000);
+        }
+
+        function updateUserBalance(userId, balance, winLinesCount) {
+            console.log('Отправка данных на сервер:', { user_id: userId, balance: balance, win_lines_count: winLinesCount, game_type: 'SLOT' });
+            fetch('/update_balance', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ user_id: userId, balance: balance, win_lines_count: winLinesCount, game_type: 'SLOT' })
+            }).then(response => response.json())
+              .then(data => {
+                  console.log('Баланс обновлен:', data);
+                  window.location.href = `game.html?user_id=${userId}`;
+              }).catch(error => {
+                  console.error('Ошибка при обновлении баланса:', error);
+                  window.location.href = `game.html?user_id=${userId}`;
+              });
+        }
+    </script>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="title">SCRATS Slot</h1>
+        <div class="reels">
+            <div class="reel" id="reel1">
+                <div class="symbols">
+                    <div class="symbol">🍒</div>
+                    <div class="symbol">🍋</div>
+                    <div class="symbol">🍉</div>
+                </div>
+                <div class="highlight-line" id="highlight-line1"></div>
+            </div>
+            <div class="reel" id="reel2">
+                <div class="symbols">
+                    <div class="symbol">🍋</div>
+                    <div class="symbol">🍉</div>
+                    <div class="symbol">🍇</div>
+                </div>
+                <div class="highlight-line" id="highlight-line2"></div>
+            </div>
+            <div class="reel" id="reel3">
+                <div class="symbols">
+                    <div class="symbol">🍉</div>
+                    <div class="symbol">🍇</div>
+                    <div class="symbol">🍓</div>
+                </div>
+                <div class="highlight-line" id="highlight-line3"></div>
+            </div>
+            <div class="reel" id="reel4">
+                <div class="symbols">
+                    <div class="symbol">🍇</div>
+                    <div class="symbol">🍓</div>
+                    <div class="symbol">🍒</div>
+                </div>
+                <div class="highlight-line" id="highlight-line4"></div>
+            </div>
+            <div class="reel" id="reel5">
+                <div class="symbols">
+                    <div class="symbol">🍓</div>
+                    <div class="symbol">🍒</div>
+                    <div class="symbol">🍋</div>
+                </div>
+                <div class="highlight-line" id="highlight-line5"></div>
+            </div>
+        </div>
+        <div class="controls">
+            <button class="btn" id="start-btn" onclick="spin()">Старт</button>
+            <div class="balance" id="balance">Баланс: 0</div>
+        </div>
+        <div class="message" id="message"></div>
+        <div class="win-line" id="win-line"></div>
+    </div>
+</body>
+</html>

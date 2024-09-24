@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игры</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            background: url('/static/fon.webp') no-repeat center center fixed;
+            background-size: cover;
+            font-family: Arial, sans-serif;
+            color: yellow;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border-radius: 50px;
+            margin-top: 30px;
+            flex-grow: 1;
+            position: relative;
+        }
+
+        .container::before {
+            content: "";
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border-radius: 50px;
+            border: 2px solid transparent;
+            background: linear-gradient(90deg, blue, gold, silver, gray);
+            background-clip: border-box;
+            background-size: 300% 300%;
+            z-index: -1;
+            animation: gradientAnimation 25s linear infinite;
+        }
+
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .game-list {
+            width: 100%;
+        }
+
+        .game {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .game h2 {
+            margin: 0;
+        }
+
+        .timer {
+            font-size: 1em;
+            margin-right: 10px;
+        }
+
+        .start-button {
+            background-color: transparent;
+            border: 2px solid yellow;
+            color: yellow;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .start-button:hover {
+            background-color: yellow;
+            color: black;
+        }
+
+        .start-button.disabled {
+            background-color: grey;
+            color: darkgrey;
+            cursor: not-allowed;
+        }
+
+        .button-bar {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+            padding: 20px 0;
+            background-color: rgba(0, 0, 0, 0.9);
+            border-radius: 10px;
+            position: relative;
+            margin-top: 30px;
+        }
+
+        .button-bar::before {
+            content: "";
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border-radius: 10px;
+            border: 10px solid transparent;
+            background: linear-gradient(90deg, blue, gold, silver, gray);
+            background-clip: border-box;
+            background-size: 300% 300%;
+            z-index: -1;
+            animation: gradientAnimation 5s linear infinite;
+        }
+
+        .logo-button {
+            background-color: transparent;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            margin: 0 5px;
+            width: 50px;
+            height: 50px;
+        }
+
+        .logo-button img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @media (max-width: 480px) {
+            .button-bar .logo-button img {
+                width: 30px;
+                height: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="game-list">
+            <div class="game">
+                <h2>SCRATSofol</h2>
+                <span id="timer1" class="timer"></span>
+                <button class="start-button" id="startButton1" onclick="startGame('scrats.html', 'SCRATS')">Старт</button>
+            </div>
+            <div class="game">
+                <h2>SCRATS Boll</h2>
+                <span id="timer2" class="timer"></span>
+                <button class="start-button" id="startButton2" onclick="startGame('boll.html', 'BOLL')">Старт</button>
+            </div>
+            <div class="game">
+                <h2>SCRATS Cube</h2>
+                <span id="timer3" class="timer"></span>
+                <button class="start-button" id="startButton3" onclick="startGame('cube.html', 'CUBE')">Старт</button>
+            </div>
+            <div class="game">
+                <h2>SCRATS Slots</h2>
+                <span id="timer4" class="timer"></span>
+                <button class="start-button" id="startButton4" onclick="startGame('slot.html', 'SLOTS')">Старт</button>
+            </div>
+        </div>
+    </div>
+    <div class="button-bar">
+        <button class="logo-button" onclick="subscribe('xcom')">
+            <img src="/static/x1.png" alt="X.COM">
+        </button>
+        <button class="logo-button" onclick="subscribe('telegram')">
+            <img src="/static/t.png" alt="Telegram">
+        </button>
+        <button class="logo-button" onclick="window.location.href='/static?user_id={{ user_id }}'">
+            <img src="/static/Statistic.jpg" alt="Statistics">
+        </button>
+        <button class="logo-button" onclick="window.location.href='/index.html?user_id={{ user_id }}'">
+            <img src="/static/home.png" alt="Home">
+        </button>
+        <button class="logo-button" onclick="window.location.href='/referrals.html?user_id={{ user_id }}'">
+            <img src="/static/fr.png" alt="Referrals">
+        </button>
+    </div>
+
+    <script>
+        const userId = '{{ user_id }}';
+
+        function updateTimer(remainingTime, timerElement) {
+            const interval = setInterval(() => {
+                remainingTime -= 1;
+                const hours = Math.floor(remainingTime / 3600);
+                const minutes = Math.floor((remainingTime % 3600) / 60);
+                timerElement.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                if (remainingTime <= 0) {
+                    clearInterval(interval);
+                    timerElement.textContent = '';
+                    const startButton = timerElement.nextElementSibling;
+                    startButton.classList.remove('disabled');
+                    startButton.disabled = false;
+                }
+            }, 1000);
+        }
+
+        function checkButtonStatus(buttonId, timerId, gameType) {
+            fetch(`/can_play?user_id=${userId}&game_type=${gameType}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(`Status for ${gameType}:`, data); // Debugging log
+                    const startButton = document.getElementById(buttonId);
+                    const timerElement = document.getElementById(timerId);
+                    if (!data.can_play) {
+                        startButton.classList.add('disabled');
+                        startButton.disabled = true;
+                        updateTimer(data.remaining_time, timerElement);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function startGame(gameUrl, gameType) {
+            fetch('/start_game', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ user_id: userId, game_type: gameType })
+            }).then(response => response.json())
+              .then(data => {
+                  console.log(`Start game ${gameType}:`, data); // Debugging log
+                  if (data.status === 'success') {
+                      window.location.href = `${gameUrl}?user_id=${userId}`;
+                  } else {
+                      alert('Ошибка: ' + data.message);
+                  }
+              }).catch(error => {
+                  console.error('Error:', error);
+              });
+        }
+
+        window.onload = () => {
+            checkButtonStatus('startButton1', 'timer1', 'SCRATS');
+            checkButtonStatus('startButton2', 'timer2', 'BOLL');
+            checkButtonStatus('startButton3', 'timer3', 'CUBE');
+            checkButtonStatus('startButton4', 'timer4', 'SLOT');
+        };
+    </script>
+</body>
+</html>
+

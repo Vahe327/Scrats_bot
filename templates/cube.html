@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cube Game</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #222;
+            color: #ffd700;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            text-align: center;
+            width: 100%;
+            max-width: 600px;
+            padding: 0 10px;
+        }
+        .instructions {
+            font-size: 2.5em;
+            color: #ffd700;
+            margin-bottom: 20px;
+            line-height: 1.2em;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 10px;
+            margin-top: 20px;
+        }
+        .cube {
+            width: 100%;
+            padding-bottom: 100%; /* Aspect ratio 1:1 */
+            position: relative;
+            border-radius: 10px;
+            background-color: transparent;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .cube-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5em;
+            border-radius: 10px;
+            color: transparent;
+        }
+        .cube:active {
+            transform: scale(1.1);
+        }
+        .cube[data-revealed="true"] .cube-content {
+            color: #ffd700;
+        }
+        .cube[data-value="empty"][data-revealed="true"] .cube-content::after {
+            content: "OY!!";
+            color: red;
+            animation: bounce 0.5s;
+        }
+        .cube[data-value="win"][data-revealed="true"] .cube-content::after {
+            content: attr(data-amount);
+            color: #ffd700;
+            animation: bounce 0.5s;
+        }
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+        @keyframes explosion {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Total Winnings: <span id="total-winnings">0</span></h1>
+        <div class="grid"></div>
+    </div>
+    <audio id="explosion-sound" src="/static/bulk.mp3"></audio>
+    <script>
+        const userId = new URLSearchParams(window.location.search).get('user_id');
+        const prizes = [20000, 50000, 10000, 5000];
+        const colors = [
+            '#FF5733', '#33FF57', '#3357FF', '#FF33A8',
+            '#33FFF2', '#FF8F33', '#B833FF', '#FF3380',
+            '#F3FF33', '#FF5733', '#33FF57', '#3357FF',
+            '#FF33A8', '#33FFF2', '#FF8F33', '#B833FF'
+        ];
+
+        let totalWinnings = 0;
+        let clicks = 0;
+        const maxClicks = 3;
+        const explosionSound = document.getElementById('explosion-sound');
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function createGrid() {
+            const grid = document.querySelector('.grid');
+            let values = Array(16).fill('empty');
+            shuffleArray(values);
+
+            // Добавление призов в случайные позиции
+            prizes.forEach(prize => {
+                let placed = false;
+                while (!placed) {
+                    const randomIndex = Math.floor(Math.random() * values.length);
+                    if (values[randomIndex] === 'empty') {
+                        values[randomIndex] = `win_${prize}`;
+                        placed = true;
+                    }
+                }
+            });
+
+            // Создание кубиков
+            shuffleArray(colors);
+            for (let i = 0; i < 16; i++) {
+                const cube = document.createElement('div');
+                cube.classList.add('cube');
+                cube.style.backgroundColor = colors[i];
+                const cubeContent = document.createElement('div');
+                cubeContent.classList.add('cube-content');
+                cube.appendChild(cubeContent);
+
+                if (values[i].startsWith('win')) {
+                    const amount = values[i].split('_')[1];
+                    cube.dataset.value = 'win';
+                    cube.dataset.amount = `+${amount}`;
+                } else {
+                    cube.dataset.value = 'empty';
+                }
+                cube.dataset.revealed = 'false';
+                cube.addEventListener('click', () => handleCubeClick(cube, cube.dataset.value));
+                grid.appendChild(cube);
+            }
+        }
+
+        function handleCubeClick(cube, value) {
+            if (cube.dataset.revealed === 'true' || clicks >= maxClicks) return;
+
+            cube.dataset.revealed = 'true';
+            cube.style.animation = 'explosion 0.5s forwards';
+            explosionSound.play();
+            clicks++;
+
+            const cubeContent = cube.querySelector('.cube-content');
+
+            if (value === 'empty') {
+                cubeContent.dataset.value = 'empty';
+            } else {
+                const amount = parseInt(cube.dataset.amount.slice(1), 10);
+                cubeContent.dataset.value = 'win';
+                totalWinnings += amount;
+                document.getElementById('total-winnings').textContent = totalWinnings;
+            }
+
+            if (clicks >= maxClicks) {
+                setTimeout(() => {
+                    updateBalance(totalWinnings);
+                }, 3000);
+            }
+        }
+
+        function updateBalance(amount) {
+            fetch('/update_balance', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ user_id: userId, balance: amount, game_type: 'CUBE' })
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.status === 'success') {
+                      window.location.href = `game.html?user_id=${userId}`;
+                  } else {
+                      console.error('Error updating balance:', data.message);
+                      window.location.href = `game.html?user_id=${userId}`;
+                  }
+              }).catch(error => {
+                  console.error('Error updating balance:', error);
+                  window.location.href = `game.html?user_id=${userId}`;
+              });
+        }
+
+        document.addEventListener('DOMContentLoaded', createGrid);
+    </script>
+</body>
+</html>

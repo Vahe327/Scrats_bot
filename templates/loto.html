@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Лотерея SCRATS</title>
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100vh;
+        }
+
+        header {
+            display: flex;
+            justify-content: flex-end;
+            padding: 20px;
+            background-color: #111;
+            border-bottom: 1px solid #333;
+        }
+
+        .ton-connect-btn {
+            border-radius: 5px 5px;
+            border: none;
+            border-radius: 45px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            background-color: #111;
+            border-top: 1px solid #333;
+        }
+
+        .container div {
+            flex: 1;
+            margin: 0 10px;
+            background-color: #222;
+            padding: 20px;
+            border-radius: 5px;
+        }
+
+        .container div h2 {
+            margin-top: 0;
+        }
+
+        .buy-ticket-btn {
+            background-color: #ffcc00;
+            color: #000;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        footer {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            background-color: #111;
+            border-top: 1px solid #333;
+        }
+        .button-bar {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            margin: 0;
+        }
+
+        .logo-button {
+            background-color: transparent;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+
+        .logo-button img {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+        }
+
+         @media (max-width: 768px) {
+            header {
+                justify-content: center;
+                padding: 10px;
+            }
+
+            .ton-connect-btn {
+                font-size: 14px;
+                padding: 5px 10px;
+            }
+
+            .container {
+                flex-direction: column;
+                padding: 10px;
+            }
+
+            .container div {
+                margin: 10px 0;
+                padding: 15px;
+            }
+
+            .buy-ticket-btn {
+                font-size: 16px;
+                padding: 12px;
+                width: 100%;
+            }
+
+            footer {
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .ton-connect-btn {
+                font-size: 12px;
+                padding: 3px 5px;
+            }
+
+            .container div {
+                padding: 10px;
+            }
+
+            .buy-ticket-btn {
+                font-size: 14px;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <button id="ton-connect" class="ton-connect-btn"></button>
+</header>
+
+<main>
+    <div class="container">
+        <div id="winners">
+            <h2>Адреса победителей</h2>
+            <ul id="winner-list">
+                <!-- Список победителей будет динамически обновляться -->
+            </ul>
+        </div>
+        <div id="total-funds">
+            <h2>Собранные средства</h2>
+            <p id="funds">0 TON</p>
+        </div>
+    </div>
+</main>
+
+<div class="button-bar">
+    <button class="logo-button" onclick="inviteReferral()">
+        <img src="/static/referral.png" alt="Пригласить реферала">
+    </button>
+    <button class="logo-button" onclick="subscribe('xcom')">
+        <img src="/static/x1.png" alt="X.COM">
+    </button>
+    <button class="logo-button" onclick="subscribe('telegram')">
+        <img src="/static/t.png" alt="Telegram">
+    </button>
+    <button class="logo-button" onclick="window.location.href='/static?user_id={{ user_id }}'">
+        <img src="/static/Statistic.jpg" alt="Статистика">
+    </button>
+    <button class="logo-button" onclick="goToHome()">
+        <img src="/static/home.png" alt="Home">
+    </button>
+</div>
+
+<footer>
+    <button id="buy-ticket" class="buy-ticket-btn">Купить билет за 1 TON</button>
+</footer>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tonweb@0.0.66/dist/tonweb.min.js"></script>
+
+<script>
+    Telegram.WebApp.ready();
+Telegram.WebApp.expand();
+const contractAddress = 'EQClioHf130v8YI8kfjGiqyOHWL1-rMsEEjzWg1Xklixsret';
+const tonweb = new TonWeb();
+
+// Функция для проверки подключения кошелька
+async function checkWalletConnection() {
+    const walletInfo = tonConnectUI.wallet;
+    if (!walletInfo) {
+        alert('Сначала подключите кошелек!');
+        return false;
+    }
+    return true;
+}
+
+// Функция для отправки 1 TON
+async function sendTransaction() {
+    try {
+        // Проверяем, подключен ли кошелек
+        if (!tonConnectUI.account) {
+            alert('Пожалуйста, подключите кошелек для отправки транзакции!');
+            return;
+        }
+
+        // Подготавливаем параметры транзакции
+        const amountInNano = TonWeb.utils.toNano('1');  // 1 TON в нанотоннах
+
+        // Создаем payload (например, пустую ячейку, если это простая транзакция)
+        const cell = new TonWeb.boc.Cell();
+
+        const transactionParams = {
+            validUntil: Math.floor(Date.now() / 1000) + 600,  // Транзакция действительна 10 минут
+            messages: [{
+                address: contractAddress,  // Адрес смарт-контракта
+                amount: amountInNano.toString(),  // Отправляем 1 TON в нанотоннах
+                payload: cell.toBoc().toString('base64'),  // Пустой payload
+                stateInit: null,
+                bounce: true
+            }]
+        };
+
+        // Отправляем транзакцию через TonConnect
+        const result = await tonConnectUI.sendTransaction(transactionParams);
+        console.log('Transaction result:', result);
+        alert('Транзакция успешно отправлена!');
+    } catch (error) {
+        console.error('Ошибка при отправке транзакции:', error);
+        alert(`Произошла ошибка: ${error.message}`);
+    }
+}
+
+// Пример вызова функции при нажатии на кнопку
+document.getElementById('buy-ticket').addEventListener('click', sendTransaction);
+
+// Функция для получения данных о победителях и собранных средствах
+async function updateContractData() {
+    try {
+        const provider = tonweb.provider('https://toncenter.com/api/v2/jsonRPC');
+        
+        // Запрос данных контракта
+        const contract = new tonweb.Contract({address: contractAddress, provider});
+        const data = await contract.getState();
+        
+        // Обновляем собранные средства
+        document.getElementById('funds').textContent = `${TonWeb.utils.fromNano(data.balance)} TON`;
+
+        // Получение победителей через контракт (пример)
+        const { winners } = await contract.callGetMethod('get_winners');
+        const winnerList = document.getElementById('winner-list');
+        winnerList.innerHTML = ''; // Очищаем старые данные
+        winners.forEach(winner => {
+            const li = document.createElement('li');
+            li.textContent = winner.toString();
+            winnerList.appendChild(li);
+        });
+    } catch (error) {
+        console.error('Ошибка при получении данных контракта:', error);
+    }
+}
+
+// Обновляем данные каждые 10 секунд
+setInterval(updateContractData, 10000);
+
+// Инициализация TonConnect UI
+const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+    manifestUrl: 'https://gist.githubusercontent.com/siandreev/75f1a2ccf2f3b4e2771f6089aeb06d7f/raw/d4986344010ec7a2d1cc8a2a9baa57de37aaccb8/gistfile1.txt',
+    buttonRootId: 'ton-connect'
+});
+
+// Отслеживаем событие успешного подключения кошелька
+tonConnectUI.onStatusChange(walletInfo => {
+    if (walletInfo) {
+        console.log('Кошелек подключен:', walletInfo);
+    } else {
+        console.log('Кошелек отключен.');
+    }
+});
+
+</script>
+
+</body>
+</html>

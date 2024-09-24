@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Roadmap</title>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+            overflow: hidden;
+            position: relative;
+            animation: explode 5s infinite;
+        }
+
+        @keyframes explode {
+            0% {
+                background-image: radial-gradient(circle, transparent 10%, rgba(255,255,255,0.5) 70%, rgba(255,255,255,0) 90%);
+            }
+            20% {
+                background-image: radial-gradient(circle, transparent 10%, rgba(255,255,255,0.5) 60%, rgba(255,255,255,0) 80%);
+            }
+            40% {
+                background-image: radial-gradient(circle, transparent 10%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0) 70%);
+            }
+            60% {
+                background-image: radial-gradient(circle, transparent 10%, rgba(255,255,255,0.5) 40%, rgba(255,255,255,0) 60%);
+            }
+            80% {
+                background-image: radial-gradient(circle, transparent 10%, rgba(255,255,255,0.5) 30%, rgba(255,255,255,0) 50%);
+            }
+            100% {
+                background-image: radial-gradient(circle, transparent 10%, rgba(255,255,255,0.5) 20%, rgba(255,255,255,0) 40%);
+            }
+        }
+
+        .completed {
+            animation: blink 1s infinite alternate;
+        }
+
+        .in-progress {
+            animation: blink 1.5s infinite alternate;
+        }
+
+        .not-started {
+            color: red;
+        }
+
+        @keyframes blink {
+            from {
+                color: limegreen;
+            }
+            to {
+                color: blue;
+            }
+        }
+
+        .completed::before {
+            content: '\2714';
+            margin-right: 5px;
+        }
+
+        .in-progress::before {
+            content: '\2022';
+            margin-right: 5px;
+        }
+
+        .not-started::before {
+            content: '\274C';
+            margin-right: 5px;
+        }
+
+        li {
+            width: 100%;
+        }
+    </style>
+    <!-- Вот ваш скрипт для телеграма -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+    </script>
+</head>
+<body>
+    <h1>Project Roadmap</h1>
+    <ol>
+        <li class="completed">Create the game</li>
+        <li class="completed">Launch the project</li>
+        <li class="not-started">Integrate boost packages</li>
+        <li class="completed">Integrate gaming sessions</li>
+        <li class="not-started">List project on exchanges</li>
+        <li class="not-started">Open withdrawals of earned tokens</li>
+    </ol>
+</body>
+</html>
