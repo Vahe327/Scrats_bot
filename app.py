@@ -15,7 +15,7 @@ db_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'data')
 if not os.path.exists(db_dir):
     os.makedirs(db_dir)
 
-TELEGRAM_TOKEN = '7339241159:AAEx2BcWyLa2F1ve5Y0E_OMEDQd3RUMVmbE'
+TELEGRAM_TOKEN = 'Token'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(db_dir, 'data.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
